@@ -1,0 +1,21 @@
+[
+  {
+    "id": 1,
+    "question": "¿Qué procedimientos existen para aduanas?",
+    "expected_keywords": ["aduana", "procedimiento"],
+    "should_find": true
+  },
+  {
+    "id": 2,
+    "question": "¿Cuál es el horario de almacén?",
+    "expected_keywords": ["almacén", "horario"],
+    "should_find": true
+  },
+  {
+    "id": 3,
+    "question": "¿Qué dice el manual sobre teletransportación?",
+    "expected_keywords": [],
+    "should_find": false,
+    "note": "Pregunta fuera de dominio - debe abstenerse"
+  }
+]

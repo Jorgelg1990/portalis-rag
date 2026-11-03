@@ -1,0 +1,35 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; background: #f5f7fa; }
+.container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+header { background: #1a365d; color: white; padding: 20px; margin-bottom: 30px; }
+h1 { font-size: 24px; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+.card { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+.card h2 { margin-bottom: 15px; color: #2d3748; font-size: 18px; }
+.upload-area { border: 2px dashed #cbd5e0; padding: 30px; text-align: center; border-radius: 8px; }
+.upload-area input { margin-top: 10px; }
+button { background: #3182ce; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; }
+button:hover { background: #2c5282; }
+button:disabled { background: #a0aec0; cursor: not-allowed; }
+.doc-list { margin-top: 15px; }
+.doc-item { padding: 10px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; }
+.status { padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+.status.pendiente { background: #feebc8; color: #744210; }
+.status.procesando { background: #bee3f8; color: #2a4365; }
+.status.listo { background: #c6f6d5; color: #22543d; }
+.status.fallido { background: #fed7d7; color: #742a2a; }
+.chat-box { height: 400px; overflow-y: auto; border: 1px solid #e2e8f0; padding: 15px; margin-bottom: 15px; }
+.message { margin-bottom: 15px; }
+.message.user { text-align: right; }
+.message .bubble { display: inline-block; padding: 10px 15px; border-radius: 8px; max-width: 70%; text-align: left; }
+.message.user .bubble { background: #3182ce; color: white; }
+.message.assistant .bubble { background: #edf2f7; color: #2d3748; }
+.citations { margin-top: 10px; font-size: 12px; }
+.citation { background: #e6fffa; padding: 5px 8px; margin: 3px 0; border-radius: 4px; }
+.citation-btn { background: none; color: #319795; border: none; padding: 2px 5px; cursor: pointer; text-decoration: underline; }
+.input-row { display: flex; gap: 10px; }
+.input-row input { flex: 1; padding: 10px; border: 1px solid #cbd5e0; border-radius: 4px; }
+.modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; }
+.modal-content { background: white; padding: 30px; border-radius: 8px; max-width: 600px; max-height: 80vh; overflow-y: auto; width: 90%; }
+.close { float: right; cursor: pointer; font-size: 24px; }
+@media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
