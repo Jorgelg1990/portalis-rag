@@ -1,36 +1,62 @@
-import os,tempfile
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from app.models.document import Document,IngestStatus
-from app.models.chunk import Chunk
-from app.workers import ingest_tasks
-from app.core.db import Base
-os.environ['CELERY_TASK_ALWAYS_EAGER']='True'
-os.environ['CELERY_EAGER_PROPAGATES_EXCEPTIONS']='True'
-ingest_tasks.celery_app.conf.task_always_eager=True
-ingest_tasks.celery_app.conf.task_eager_propagates=True
+import os
 
-def test_pgvector_integration_real():
-    engine=create_engine('sqlite:///:memory:',connect_args={'check_same_thread':False})
-    Base.metadata.create_all(engine)
-    Session=sessionmaker(bind=engine)
-    ingest_tasks.SessionLocal=Session
-    db=Session()
-    f=tempfile.NamedTemporaryFile(mode='w',suffix='.txt',delete=False,encoding='utf-8')
-    f.write('test pgvector integration')
-    f.close()
+import pytest
+from sqlalchemy import create_engine, text
+
+
+def _sync_url() -> str:
+    url = os.environ.get("SYNC_DATABASE_URL") or "postgresql://postgres:postgres@localhost:5432/test_db"
+    if url.startswith("postgresql+asyncpg"):
+        url = url.replace("postgresql+asyncpg", "postgresql")
+    return url
+
+
+@pytest.fixture(scope="module")
+def pg_engine():
+    engine = create_engine(_sync_url(), future=True)
     try:
-        doc=Document(filename='test-aduanas.txt',file_path=f.name,file_type='txt',file_size=100,status=IngestStatus.PENDIENTE,workspace_id='default')
-        db.add(doc); db.commit(); db.refresh(doc)
-        result=ingest_tasks.ingest_document.delay(str(doc.id),f.name,'default')
-        assert result.successful()
-        db.expire_all()
-        doc_check=db.query(Document).filter(Document.id==doc.id).first()
-        assert doc_check.status==IngestStatus.LISTO
-        chunks=db.query(Chunk).filter(Chunk.document_id==doc.id).all()
-        assert len(chunks)>0
-    finally:
-        db.close()
-        try: os.unlink(f.name)
-        except: pass
-        engine.dispose()
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+    except Exception as exc:  # no DB available (local run without docker)
+        pytest.skip(f"PostgreSQL no disponible: {exc}")
+    yield engine
+    engine.dispose()
+
+
+def test_pgvector_similarity_search(pg_engine):
+    """Integración real contra PostgreSQL + pgvector (no sqlite)."""
+    with pg_engine.begin() as conn:
+        conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+        conn.execute(text("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\""))
+        conn.execute(text("DROP TABLE IF EXISTS test_chunks_pgvector"))
+        conn.execute(
+            text(
+                "CREATE TABLE test_chunks_pgvector ("
+                "id uuid PRIMARY KEY DEFAULT uuid_generate_v4(), "
+                "content text NOT NULL, "
+                "embedding vector(3) NOT NULL)"
+            )
+        )
+        # two vectors: one identical to the query, one orthogonal
+        conn.execute(
+            text(
+                "INSERT INTO test_chunks_pgvector (content, embedding) VALUES "
+                "('fragmento relevante', '[1,0,0]'), "
+                "('fragmento irrelevante', '[0,1,0]')"
+            )
+        )
+
+        row = conn.execute(
+            text(
+                "SELECT content, 1 - (embedding <=> '[1,0,0]'::vector) AS score "
+                "FROM test_chunks_pgvector "
+                "ORDER BY embedding <=> '[1,0,0]'::vector "
+                "LIMIT 1"
+            )
+        ).first()
+
+        assert row is not None
+        assert row[0] == "fragmento relevante"
+        assert float(row[1]) == pytest.approx(1.0, abs=1e-6)
+
+        conn.execute(text("DROP TABLE test_chunks_pgvector"))
