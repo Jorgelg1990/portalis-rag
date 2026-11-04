@@ -35,6 +35,11 @@ function DocumentList({ refresh }) {
                 <strong>{doc.filename}</strong>
                 <br />
                 <small style={{color: '#718096'}}>{doc.file_type.toUpperCase()}</small>
+                {doc.error_message && (
+                  <div style={{color: '#c53030', fontSize: '12px', marginTop: '4px'}}>
+                    {doc.error_message}
+                  </div>
+                )}
               </div>
               <span className={`status ${doc.status}`}>{doc.status}</span>
             </div>

@@ -8,6 +8,30 @@ function Chat() {
   const [question, setQuestion] = useState('')
   const [loading, setLoading] = useState(false)
   const [selectedCitation, setSelectedCitation] = useState(null)
+  const [fragment, setFragment] = useState(null)
+  const [fragmentLoading, setFragmentLoading] = useState(false)
+
+  const openCitation = async (citation) => {
+    setSelectedCitation(citation)
+    setFragment(null)
+    setFragmentLoading(true)
+    try {
+      const res = await axios.get(
+        `${API_URL}/api/documents/chunks/${citation.chunk_id}`,
+        { params: { workspace_id: 'default' } }
+      )
+      setFragment(res.data)
+    } catch (err) {
+      setFragment({ content: citation.snippet, error: err.message })
+    } finally {
+      setFragmentLoading(false)
+    }
+  }
+
+  const closeCitation = () => {
+    setSelectedCitation(null)
+    setFragment(null)
+  }
   
   const askQuestion = async (e) => {
     e.preventDefault()
@@ -66,9 +90,10 @@ function Chat() {
                     <div key={i} className="citation">
                       <button 
                         className="citation-btn"
-                        onClick={() => setSelectedCitation(c)}
+                        onClick={() => openCitation(c)}
                       >
                         [{i+1}] {c.document_name} {c.page_number ? `(p.${c.page_number})` : ''}
+                        {c.section ? ` — ${c.section}` : ''}
                       </button>
                       <div style={{marginTop: '3px'}}>{c.snippet}</div>
                     </div>
@@ -99,14 +124,18 @@ function Chat() {
       </form>
       
       {selectedCitation && (
-        <div className="modal" onClick={() => setSelectedCitation(null)}>
+        <div className="modal" onClick={closeCitation}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <span className="close" onClick={() => setSelectedCitation(null)}>&times;</span>
+            <span className="close" onClick={closeCitation}>&times;</span>
             <h3>Fragmento Fuente</h3>
             <p style={{marginTop: '10px'}}><strong>Documento:</strong> {selectedCitation.document_name}</p>
             {selectedCitation.page_number && <p><strong>Página:</strong> {selectedCitation.page_number}</p>}
+            {(fragment?.section || selectedCitation.section) && (
+              <p><strong>Sección:</strong> {fragment?.section || selectedCitation.section}</p>
+            )}
+            <p><strong>Similitud:</strong> {Number(selectedCitation.score).toFixed(3)}</p>
             <div style={{marginTop: '15px', padding: '15px', background: '#f7fafc', borderRadius: '4px', whiteSpace: 'pre-wrap'}}>
-              {selectedCitation.snippet}
+              {fragmentLoading ? 'Cargando fragmento completo...' : (fragment?.content || selectedCitation.snippet)}
             </div>
           </div>
         </div>

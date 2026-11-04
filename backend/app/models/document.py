@@ -20,7 +20,11 @@ class Document(Base):
     file_path = Column(String, nullable=False)
     file_type = Column(String, nullable=False)
     file_size = Column(Integer, nullable=False)
-    status = Column(Enum(IngestStatus), default=IngestStatus.PENDIENTE, index=True)
+    status = Column(
+        Enum(IngestStatus, values_callable=lambda e: [m.value for m in e], name="ingest_status"),
+        default=IngestStatus.PENDIENTE,
+        index=True,
+    )
     error_message = Column(Text, nullable=True)
     task_id = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

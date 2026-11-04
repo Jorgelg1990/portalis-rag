@@ -23,4 +23,14 @@ class DocumentListItem(BaseModel):
     filename: str
     status: str
     file_type: str
+    error_message: Optional[str] = None
     created_at: datetime
+
+class ChunkDetail(BaseModel):
+    chunk_id: UUID
+    document_id: UUID
+    workspace_id: str
+    content: str
+    page_number: Optional[int] = None
+    section: Optional[str] = None
+    chunk_index: int

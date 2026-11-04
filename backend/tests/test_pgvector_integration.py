@@ -5,7 +5,9 @@ from sqlalchemy import create_engine, text
 
 
 def _sync_url() -> str:
-    url = os.environ.get("SYNC_DATABASE_URL") or "postgresql://postgres:postgres@localhost:5432/test_db"
+    from app.core.config import settings
+
+    url = os.environ.get("SYNC_DATABASE_URL") or settings.sync_database_url
     if url.startswith("postgresql+asyncpg"):
         url = url.replace("postgresql+asyncpg", "postgresql")
     return url

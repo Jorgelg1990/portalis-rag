@@ -2,6 +2,7 @@ from sqlalchemy import Column, String, Integer, Text, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from pgvector.sqlalchemy import Vector
 import uuid
+from app.core.config import settings
 from app.core.db import Base
 
 class Chunk(Base):
@@ -14,5 +15,5 @@ class Chunk(Base):
     page_number = Column(Integer, nullable=True)
     section = Column(String, nullable=True)
     chunk_index = Column(Integer, nullable=False)
-    embedding = Column(Vector(384), nullable=True)  # small dim for mock
+    embedding = Column(Vector(settings.embedding_dim), nullable=True)
     metadata_json = Column(Text, nullable=True)
